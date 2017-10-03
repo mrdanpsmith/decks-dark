@@ -7,6 +7,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.MediaType;
 import org.springframework.restdocs.JUnitRestDocumentation;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
@@ -16,6 +17,7 @@ import org.springframework.web.context.WebApplicationContext;
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.junit.Assert.assertThat;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.documentationConfiguration;
@@ -57,7 +59,6 @@ public class DeckControllerTest {
     public void setUp() {
         mockMvc = MockMvcBuilders.webAppContextSetup(context)
                                  .apply(documentationConfiguration(restDocumentation))
-                                 .alwaysDo(document("deck"))
                                  .build();
     }
     
@@ -67,11 +68,30 @@ public class DeckControllerTest {
     }
     
     @Test
-    public void shouldAcceptPutRequests() throws Exception {
-        mockMvc.perform(put("/deck/test").content(resourceAsString("/validPutRequest.json")))
-                .andExpect(status().isOk());
+    public void shouldRejectPutRequestsWithInvalidDecks() throws Exception {
+        mockMvc.perform(put("/deck/test").contentType(MediaType.APPLICATION_JSON_VALUE)
+                                         .content(resourceAsString("/emptyCardArray.json")))
+               .andExpect(status().isBadRequest())
+               .andDo(document("badRequest"));
+        mockMvc.perform(put("/deck/test").contentType(MediaType.APPLICATION_JSON_VALUE)
+                                         .content(resourceAsString("/deckWithDupes.json")))
+               .andExpect(status().isBadRequest()); 
+        mockMvc.perform(put("/deck/test").contentType(MediaType.APPLICATION_JSON_VALUE)
+                                         .content(resourceAsString("/deckWithInvalidCards.json")))
+               .andExpect(status().isBadRequest());
     }
-    
+
+    @Test
+    public void shouldAcceptPutRequests() throws Exception {
+        mockMvc.perform(put("/deck/test").contentType(MediaType.APPLICATION_JSON_VALUE)
+                                         .content(resourceAsString("/validDeck.json")))
+               .andExpect(status().isOk())
+               .andDo(document("putDeck"));
+        mockMvc.perform(get("/deck/test"))
+               .andExpect(status().isOk())
+               .andDo(document("getDeck"));
+    }
+
     private String resourceAsString(String resourcePath) {
         try (Scanner scanner = new Scanner(getClass().getResourceAsStream(resourcePath), "UTF-8")) {
             return scanner.useDelimiter("\\A").next();
