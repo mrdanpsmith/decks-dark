@@ -2,9 +2,10 @@ package com.siirush.decksdark;
 
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
-import javax.websocket.server.PathParam;
+import java.util.Set;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -17,13 +18,24 @@ public class DeckController {
     private final DeckService deckService;
     
     @RequestMapping(path = "{name}", method = RequestMethod.PUT, consumes = MediaType.APPLICATION_JSON_VALUE)
-    public Deck putDeck(@PathParam("name") String name, @RequestBody String[] cardArray) {
-        return validateDeck(cardArray);
+    public Deck putDeck(@PathVariable("name") String name, @RequestBody String[] cardArray) {
+        Deck deck = validateDeck(cardArray);
+        deckService.put(name, deck);
+        return deck;
     }
     
     @RequestMapping(path = "{name}", method = RequestMethod.GET)
-    public Deck getDeck(String name) {
-        return new Deck();
+    public String[] getDeck(@PathVariable("name") String name) {
+        return deckToArray(deckService.get(name));
+    }
+    
+    @RequestMapping(method = RequestMethod.GET)
+    public Set<String> getDeckList() {
+        return deckService.getDeckList();
+    }
+    
+    private String[] deckToArray(Deck deck) {
+        return deck.getCards().stream().map((card) -> card.toString()).toArray(String[]::new);
     }
 
     private Deck validateDeck(String[] cardArray) {

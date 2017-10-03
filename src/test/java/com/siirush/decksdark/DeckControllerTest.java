@@ -14,6 +14,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
+import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.junit.Assert.assertThat;
@@ -22,6 +23,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.documentationConfiguration;
 import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.document;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 
 /*
 Requirements:
@@ -29,13 +31,13 @@ Requirements:
 ·         A card may be represented as a simple string such as “5-heart”, or “K-spade”.
 ·         A deck is an ordered list of 52 standard playing cards.
 ·         Expose a RESTful interface that allows a user to:
-·         PUT an idempotent request for the creation of a new named deck.  New decks are created in some initial sorted order.
+·         [x] PUT an idempotent request for the creation of a new named deck.  New decks are created in some initial sorted order.
 ·         POST a request to shuffle an existing named deck.
-·         GET a list of the current decks persisted in the service.
-·         GET a named deck in its current sorted/shuffled order.
-·         DELETE a named deck.
-·         Design your own data and API structure(s) for the deck.
-·         Persist the decks in-memory only, but stub the persistence layer such that it can be later upgraded to a durable datastore.
+·         [x] GET a list of the current decks persisted in the service.
+·         [x] GET a named deck in its current sorted/shuffled order.
+·         [x] DELETE a named deck.
+·         [x] Design your own data and API structure(s) for the deck.
+·         [x] Persist the decks in-memory only, but stub the persistence layer such that it can be later upgraded to a durable datastore.
 ·         Implement a simple shuffling algorithm that simply randomizes the deck in-place.
 ·         Implement a more complex algorithm that simulates hand-shuffling, i.e. splitting the deck in half and interleaving the two halves, repeating the process multiple times.
 ·         Allow switching the algorithms at deploy-time only via configuration.
@@ -50,6 +52,9 @@ public class DeckControllerTest {
     @Autowired
     private DeckController deckController;
     
+    @Autowired
+    private DeckService deckService;
+    
     private MockMvc mockMvc;
 
     @Rule
@@ -57,6 +62,7 @@ public class DeckControllerTest {
 
     @Before
     public void setUp() {
+        deckService.deleteAll();
         mockMvc = MockMvcBuilders.webAppContextSetup(context)
                                  .apply(documentationConfiguration(restDocumentation))
                                  .build();
@@ -82,13 +88,21 @@ public class DeckControllerTest {
     }
 
     @Test
-    public void shouldAcceptPutRequests() throws Exception {
+    public void shouldStoreAValidDeck() throws Exception {
         mockMvc.perform(put("/deck/test").contentType(MediaType.APPLICATION_JSON_VALUE)
                                          .content(resourceAsString("/validDeck.json")))
                .andExpect(status().isOk())
                .andDo(document("putDeck"));
+        mockMvc.perform(get("/deck"))
+               .andExpect(status().isOk())
+               .andExpect(jsonPath("$.length()", is(1)))
+               .andExpect(jsonPath("$[0]", is("test")))
+               .andDo(document("getDeckList"));
         mockMvc.perform(get("/deck/test"))
                .andExpect(status().isOk())
+               .andExpect(jsonPath("$.length()", is(52)))
+               .andExpect(jsonPath("$[0]", is("2-spade")))
+               .andExpect(jsonPath("$[51]", is("A-diamond")))
                .andDo(document("getDeck"));
     }
 

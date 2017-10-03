@@ -3,13 +3,14 @@ package com.siirush.decksdark;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 import org.springframework.stereotype.Service;
 
 @Service
 public class DeckService {
-    private static final Map<String, Deck> deckMap = Collections.synchronizedMap(new HashMap<>());
+    private final Map<String, Deck> deckMap = Collections.synchronizedMap(new HashMap<>());
     
-    public void create(String name, Deck deck) {
+    public void put(String name, Deck deck) {
         deckMap.put(name, deck);
     }
     
@@ -19,5 +20,13 @@ public class DeckService {
 
     public void delete(String name) {
         deckMap.remove(name);
+    }
+
+    public Set<String> getDeckList() {
+        return deckMap.keySet();
+    }
+    
+    public void deleteAll() {
+        deckMap.clear();
     }
 }
