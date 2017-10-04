@@ -1,9 +1,5 @@
 package com.siirush.decksdark;
 
-import com.siirush.decksdark.Card.Suit;
-import com.siirush.decksdark.Card.Value;
-import java.util.ArrayList;
-import java.util.List;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,26 +16,15 @@ public class InplaceShufflerTest {
     @Autowired
     private InplaceShuffler inplaceShuffler;
     
+    @Autowired
+    private TestDeckCreator testDeckCreator;
+    
     @Test
     public void shouldShuffleCards() {
-        Deck testDeck = createTestDeck();
-        Deck compareDeck = createTestDeck();
+        Deck testDeck = testDeckCreator.createTestDeck();
+        Deck compareDeck = testDeckCreator.createTestDeck();
         assertThat(testDeck, equalTo(compareDeck));
         inplaceShuffler.shuffleDeck(testDeck);
         assertThat(testDeck, not(equalTo(compareDeck)));
-    }
-    
-    private Deck createTestDeck() {
-        return new Deck(createTestCards());
-    }
-    
-    private List<Card> createTestCards() {
-        List<Card> cards = new ArrayList<>();
-        for (Suit suit: Suit.values()) {
-            for (Value value: Value.values()) {
-                cards.add(new Card(suit, value));
-            }
-        }
-        return cards;
     }
 }
