@@ -1,11 +1,13 @@
 package com.siirush.decksdark;
 
 import java.util.List;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
-import lombok.Setter;
+import lombok.RequiredArgsConstructor;
 
 @Getter
-@Setter
+@RequiredArgsConstructor
+@EqualsAndHashCode
 public class Deck {
-    private List<Card> cards;
+    private final List<Card> cards;
 }

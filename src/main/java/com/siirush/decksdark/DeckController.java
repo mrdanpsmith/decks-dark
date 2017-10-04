@@ -18,20 +18,36 @@ public class DeckController {
     private final DeckService deckService;
     
     @RequestMapping(path = "{name}", method = RequestMethod.PUT, consumes = MediaType.APPLICATION_JSON_VALUE)
-    public Deck putDeck(@PathVariable("name") String name, @RequestBody String[] cardArray) {
+    public SuccessResponse putDeck(@PathVariable("name") String name, @RequestBody String[] cardArray) {
         Deck deck = validateDeck(cardArray);
         deckService.put(name, deck);
-        return deck;
+        return new SuccessResponse();
     }
     
     @RequestMapping(path = "{name}", method = RequestMethod.GET)
     public String[] getDeck(@PathVariable("name") String name) {
-        return deckToArray(deckService.get(name));
+        Deck deck = deckService.get(name);
+        if (deck == null) {
+            throw new DeckNotFoundException(String.format("Deck not found. name=%s", name));
+        }
+        return deckToArray(deck);
     }
     
     @RequestMapping(method = RequestMethod.GET)
     public Set<String> getDeckList() {
         return deckService.getDeckList();
+    }
+
+    @RequestMapping(path = "{name}/shuffle", method = RequestMethod.POST)
+    public SuccessResponse shuffleDeck(@PathVariable("name") String name) {
+        deckService.shuffle(name);
+        return new SuccessResponse();
+    }
+    
+    @RequestMapping(path = "{name}", method = RequestMethod.DELETE)
+    public SuccessResponse deleteDeck(@PathVariable("name") String name) {
+        deckService.delete(name);
+        return new SuccessResponse();
     }
     
     private String[] deckToArray(Deck deck) {
@@ -42,7 +58,6 @@ public class DeckController {
         if (cardArray.length != 52) {
             throw new InvalidDeckException("Your deck does not contain 52 cards.");
         }
-        Deck deck = new Deck();
         LinkedHashSet<Card> cards = new LinkedHashSet<>();
         for (String cardStr: cardArray) {
             cards.add(cardOf(cardStr));
@@ -50,8 +65,7 @@ public class DeckController {
         if (cards.size() != 52) {
             throw new InvalidDeckException("Your deck does not contain 52 unique cards.");
         }
-        deck.setCards(new ArrayList<>(cards));
-        return deck;
+        return new Deck(new ArrayList<>(cards));
     }
     
     private Card cardOf(String cardStr) {
