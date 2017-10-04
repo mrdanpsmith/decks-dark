@@ -34,9 +34,10 @@ public class DeckService {
     }
     
     public void shuffle(String name) {
-        if (!deckMap.containsKey(name)) {
+        Deck toShuffle = deckMap.get(name);
+        if (toShuffle == null) {
             throw new DeckNotFoundException(String.format("Deck not found. name=%s", name));
         }
-        shuffler.shuffleDeck(deckMap.get(name));
+        shuffler.shuffleDeck(toShuffle);
     }
 }
