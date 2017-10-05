@@ -1,1 +1,83 @@
-Decks Dark
+= Decks Dark
+
+A Radiohead inspired deck-shuffling Spring Boot microservice.
+
+video::i3__KOf6xZE[youtube, width=560, height=315]
+
+== Usage
+
+=== Adding a new deck
+Add a new deck into the service using a PUT request with a complete deck in starting order.
+
+The end of the URL (in this example "test") will be the name of the new deck.
+include::{snippets}/putDeck/curl-request.adoc[lines=1..5]
+...
+include::{snippets}/putDeck/curl-request.adoc[lines=50..-1]
+
+If you include the 52 unique cards, you should get a success response.
+include::{snippets}/putDeck/http-response.adoc[]
+
+If the deck contains duplicates, or is missing cards, you will get an error response.
+include::{snippets}/badPutRequest/curl-request.adoc[]
+
+include::{snippets}/badPutRequest/http-response.adoc[]
+
+=== Viewing a deck
+If you know the name of the deck you want, you can view it via GET request.
+include::{snippets}/getDeck/curl-request.adoc[]
+include::{snippets}/getDeck/http-response.adoc[]
+
+If you attempt to query for a deck that is not stored in the service, you will get a 404 error response.
+include::{snippets}/deckNotFound/curl-request.adoc[]
+include::{snippets}/deckNotFound/http-response.adoc[]
+
+=== Shuffling the deck
+After you have a deck to shuffle, you can shuffle it via POST request using the name you PUT it under.
+include::{snippets}/shuffleDeck/curl-request.adoc[]
+
+In return you will get a success response if the deck is found.
+include::{snippets}/shuffleDeck/http-response.adoc[]
+
+You can view the deck has been shuffled via GET request.
+
+*Before*
+include::{snippets}/deckBeforeShuffle/http-response.adoc[]
+
+*After*
+include::{snippets}/deckAfterShuffle/http-response.adoc[]
+
+If you request to shuffle a deck that is not stored in the service, you will receive an error response.
+include::{snippets}/deckToShuffleNotFound/curl-request.adoc[]
+include::{snippets}/deckToShuffleNotFound/http-response.adoc[]
+
+=== Getting the deck list
+After you have added a deck, you should be able to issue a GET to the service root to get the list of decks.
+include::{snippets}/getDeckList/curl-request.adoc[]
+
+In return you will get an array of named decks.
+include::{snippets}/getDeckList/http-response.adoc[]
+
+=== Deleting a deck
+Delete a deck by issuing a DELETE request with the name of the deck to delete.
+include::{snippets}/deleteDeck/curl-request.adoc[]
+include::{snippets}/deleteDeck/http-response.adoc[]
+
+*Note: deleting a deck will return a successful response even if the deck has not been persisted.*
+
+== Deck shuffling strategies
+Two shuffling strategies are included with this microservice:
+ * Simple in-place strategy (default) - uses Collections.shuffle on the deck's cards to shuffle them in place.
+ * Interlace strategy - splits the deck in half and then interlaces one from each half one after the other. By default it completes this process ten times before completion.
+
+You can switch which is used at deploy time by setting the spring profile.
+
+----
+java -jar ./target/decks-dark-0.0.1-SNAPSHOT.jar --spring.profiles.active=interlace-shuffle
+----
+
+If you want to change the number of iterations that the interlace shuffle does, you can also configure that at deploy time by specifying it as well.
+
+Here is an example to make the shuffler use do only one iteration per shuffle.
+----
+java -jar ./target/decks-dark-0.0.1-SNAPSHOT.jar --interlace.iterations=1 --spring.profiles.active=interlace-shuffle
+----

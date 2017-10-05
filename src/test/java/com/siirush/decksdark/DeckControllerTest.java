@@ -27,23 +27,17 @@ import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.docu
 import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.document;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static net.javacrumbs.jsonunit.spring.JsonUnitResultMatchers.json;
-
-/*
-[x] Create a microservice that stores and shuffles card decks.
-[x] A card may be represented as a simple string such as “5-heart”, or “K-spade”.
-[x] A deck is an ordered list of 52 standard playing cards.
-[x] Expose a RESTful interface that allows a user to:
-[x] PUT an idempotent request for the creation of a new named deck.  New decks are created in some initial sorted order.
-[x] POST a request to shuffle an existing named deck.
-[x] GET a list of the current decks persisted in the service.
-[x] GET a named deck in its current sorted/shuffled order.
-[x] DELETE a named deck.
-[x] Design your own data and API structure(s) for the deck.
-[x] Persist the decks in-memory only, but stub the persistence layer such that it can be later upgraded to a durable datastore.
-[x] Implement a simple shuffling algorithm that simply randomizes the deck in-place.
-[x] Implement a more complex algorithm that simulates hand-shuffling, i.e. splitting the deck in half and interleaving the two halves, repeating the process multiple times.
-[x] Allow switching the algorithms at deploy-time only via configuration.
-*/
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.not;
+import static org.hamcrest.CoreMatchers.nullValue;
+import static org.junit.Assert.assertThat;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.documentationConfiguration;
+import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.document;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest
@@ -60,7 +54,7 @@ public class DeckControllerTest {
     private MockMvc mockMvc;
 
     @Rule
-    public JUnitRestDocumentation restDocumentation = new JUnitRestDocumentation("target/generated-docs/snippets");
+    public JUnitRestDocumentation restDocumentation = new JUnitRestDocumentation("target/generated-snippets");
 
     @Before
     public void setUp() {
@@ -80,7 +74,7 @@ public class DeckControllerTest {
         mockMvc.perform(put("/deck/test").contentType(MediaType.APPLICATION_JSON_VALUE)
                                          .content(resourceAsString("/emptyCardArray.json")))
                .andExpect(status().isBadRequest())
-               .andDo(document("badRequest"));
+               .andDo(document("badPutRequest"));
         mockMvc.perform(put("/deck/test").contentType(MediaType.APPLICATION_JSON_VALUE)
                                          .content(resourceAsString("/deckWithDupes.json")))
                .andExpect(status().isBadRequest()); 
@@ -109,11 +103,15 @@ public class DeckControllerTest {
     }
     
     @Test
-    public void shouldSortDecks() throws Exception {
+    public void shouldShuffleDecks() throws Exception {
         String validDeck = resourceAsString("/validDeck.json");
         mockMvc.perform(put("/deck/test").contentType(MediaType.APPLICATION_JSON_VALUE)
                                          .content(validDeck))
                .andExpect(status().isOk());
+        
+        mockMvc.perform(get("/deck/test"))
+               .andExpect(status().isOk())
+               .andDo(document("deckBeforeShuffle"));
 
         mockMvc.perform(post("/deck/test/shuffle"))
                .andExpect(status().isOk())
@@ -122,7 +120,8 @@ public class DeckControllerTest {
         mockMvc.perform(get("/deck/test"))
                .andExpect(status().isOk())
                .andExpect(jsonPath("$.length()", is(52)))
-               .andExpect(json().isNotEqualTo(validDeck));
+               .andExpect(json().isNotEqualTo(validDeck))
+               .andDo(document("deckAfterShuffle"));
     }
 
     @Test
