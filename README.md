@@ -1,4 +1,7 @@
 # Decks Dark
+## Prerequisites
+In order to build this project you should have Java 8 installed as your primary JDK and be able to run "java" and "javac" commands on the command line.
+
 ## Building
 This project uses maven and includes the maven wrapper. It can be built using the following command (from the root of the project):
 
