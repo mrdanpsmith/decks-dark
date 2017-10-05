@@ -1,5 +1,7 @@
 = Decks Dark
+
 == Building and Usage
+
 This project uses maven and includes the maven wrapper. It can be built using the following command (from the root of the project):
 
     ./mvnw clean install
