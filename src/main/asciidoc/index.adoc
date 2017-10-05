@@ -65,9 +65,11 @@ include::{snippets}/deleteDeck/http-response.adoc[]
 *Note: deleting a deck will return a successful response even if the deck has not been persisted.*
 
 == Deck shuffling strategies
+
 Two shuffling strategies are included with this microservice:
- * Simple in-place strategy (default) - uses Collections.shuffle on the deck's cards to shuffle them in place.
- * Interlace strategy - splits the deck in half and then interlaces one from each half one after the other. By default it completes this process ten times before completion.
+
+ * *Simple in-place strategy (default)* - uses Collections.shuffle on the deck's cards to shuffle them in place.
+ * *Interlace strategy* - splits the deck in half and then interlaces one from each half one after the other. By default it completes this process ten times before completion.
 
 You can switch which is used at deploy time by setting the spring profile.
 
