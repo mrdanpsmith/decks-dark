@@ -9,7 +9,7 @@
 	<packaging>jar</packaging>
 
 	<name>decks-dark</name>
-	<description>Demo project for Spring Boot</description>
+	<description>A Radiohead inspired deck-shuffling Spring Boot microservice</description>
 
 	<parent>
 		<groupId>org.springframework.boot</groupId>
